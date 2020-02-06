@@ -1,0 +1,1 @@
+from gym_cards.envs.wizards_env import WizardsEnv

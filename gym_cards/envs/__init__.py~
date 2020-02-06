@@ -1,0 +1,1 @@
+from gym_cards.envs.easy_skat_env import EasySkatEnv

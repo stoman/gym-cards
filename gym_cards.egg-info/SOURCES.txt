@@ -1,0 +1,7 @@
+README.md
+setup.py
+gym_cards.egg-info/PKG-INFO
+gym_cards.egg-info/SOURCES.txt
+gym_cards.egg-info/dependency_links.txt
+gym_cards.egg-info/requires.txt
+gym_cards.egg-info/top_level.txt
