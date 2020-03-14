@@ -6,13 +6,14 @@ from gym.utils import seeding
 class WizardsEnv(gym.Env):
   metadata = {'render.modes': ['human']}
 
-  def __init__(self, suits=5, max_card=10, players=4, seed=None):
+  def __init__(self, suits=2, max_card=5, players=2, seed=None):
     self.suits = suits
     self.max_card = max_card
     self.players = players
     self.cards_per_player = (suits * max_card) // players
   
-    self.action_space = spaces.Box(low=0.0, high=1.0, shape=[self.cards_per_player], dtype=np.float32)
+    self.action_space = spaces.Discrete(self.cards_per_player)
+    # self.action_space = spaces.Box(low=0.0, high=1.0, shape=[self.cards_per_player], dtype=np.float32)
     self.observation_space = spaces.Tuple((
       spaces.MultiDiscrete([max_card + 1, suits + 1] * self.cards_per_player), # cards in hand
       spaces.MultiDiscrete([max_card + 1, suits + 1] * players), # cards played this turn
@@ -30,10 +31,11 @@ class WizardsEnv(gym.Env):
     assert self.action_space.contains(action)
     
     # play the card the agent has chosen
-    chosen_card = np.array(self.hands[0][action.argmax()])
+    card_id = action # .argmax()
+    chosen_card = np.array(self.hands[0][card_id])
     if chosen_card[0] == 0:
-      return self._get_observations(), -1, True, {"reason": "played card that was played before"} 
-    self.hands[0][action.argmax()] = [0, 0]
+      return self._lost("played card that was played before") 
+    self.hands[0][card_id] = [0, 0]
     self.played_cards[0] = chosen_card
     
     # check whether the correct suit was played
@@ -41,7 +43,7 @@ class WizardsEnv(gym.Env):
     if len(played_suits) > 0:
       called_suite = played_suits[0]
       if not chosen_card[1] == called_suite and len([card for card in self.hands[0] if card[1] == called_suite]) > 0:
-        return self._get_observations(), -1, True, {"reason": "did not play suite called for"}
+        return self._lost("did not play suite called for")
     else:
       called_suite = chosen_card[1]
     
@@ -69,6 +71,9 @@ class WizardsEnv(gym.Env):
     
     return self._get_observations(), reward, done, info
       
+  def _lost(self, reason):
+    return self._get_observations(), -100 + 10*sum(self.scores) + self.scores[0], True, {"reason": reason}
+
   def reset(self):
     deck = [[i, suit] for i in range(1, self.max_card + 1) for suit in range(1, self.suits + 1)]
     shuffled_deck = self.np_random.permutation(deck) 
@@ -96,4 +101,6 @@ class WizardsEnv(gym.Env):
     return called_suite if called_suite > 0 else self.played_cards[player][1]
       
   def _get_observations(self):
-    return (self.hands[0], self.played_cards, self.scores)
+    # return (self.hands[0], self.played_cards, self.scores)
+    first = min([i for i in range(self.players) if not self.played_cards[i][0] == 0], default=0)
+    return (self.hands[0], self.played_cards[first:] + self.played_cards[:first], self.scores)
