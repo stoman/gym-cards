@@ -14,11 +14,12 @@ class WizardsEnv(gym.Env):
   
     self.action_space = spaces.Discrete(self.cards_per_player)
     # self.action_space = spaces.Box(low=0.0, high=1.0, shape=[self.cards_per_player], dtype=np.float32)
-    self.observation_space = spaces.Tuple((
+    self.unflattened_observation_space = spaces.Tuple((
       spaces.MultiDiscrete([max_card + 1, suits + 1] * self.cards_per_player), # cards in hand
       spaces.MultiDiscrete([max_card + 1, suits + 1] * players), # cards played this turn
       spaces.MultiDiscrete([self.cards_per_player + 1] * players) # scores
     ))
+    self.observation_space = spaces.Box(low=-float('inf'), high=float('inf'), shape=(spaces.flatdim(self.unflattened_observation_space), ), dtype=np.float32)
     
     self.seed(seed)
     self.reset()
@@ -103,4 +104,5 @@ class WizardsEnv(gym.Env):
   def _get_observations(self):
     # return (self.hands[0], self.played_cards, self.scores)
     first = min([i for i in range(self.players) if not self.played_cards[i][0] == 0], default=0)
-    return (self.hands[0], self.played_cards[first:] + self.played_cards[:first], self.scores)
+    obs = (self.hands[0], self.played_cards[first:] + self.played_cards[:first], self.scores)
+    return spaces.flatten(self.unflattened_observation_space, obs)
