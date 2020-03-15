@@ -6,7 +6,7 @@ from gym.utils import seeding
 class WizardsEnv(gym.Env):
   metadata = {'render.modes': ['human']}
 
-  def __init__(self, suits=2, max_card=5, players=2, seed=None):
+  def __init__(self, suits=4, max_card=13, players=4, seed=None):
     self.suits = suits
     self.max_card = max_card
     self.players = players
