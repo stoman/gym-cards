@@ -12,8 +12,8 @@ class WizardsEnv(gym.Env):
     self.players = players
     self.cards_per_player = (suits * max_card) // players
   
-    self.action_space = spaces.Discrete(self.cards_per_player)
-    # self.action_space = spaces.Box(low=0.0, high=1.0, shape=[self.cards_per_player], dtype=np.float32)
+    # self.action_space = spaces.Discrete(self.cards_per_player)
+    self.action_space = spaces.Box(low=0.0, high=1.0, shape=[self.cards_per_player], dtype=np.float32)
     self.unflattened_observation_space = spaces.Tuple((
       spaces.MultiDiscrete([max_card + 1, suits + 1] * self.cards_per_player), # cards in hand
       spaces.MultiDiscrete([max_card + 1, suits + 1] * players), # cards played this turn
@@ -32,7 +32,7 @@ class WizardsEnv(gym.Env):
     assert self.action_space.contains(action)
     
     # play the card the agent has chosen
-    card_id = action # .argmax()
+    card_id = action.argmax()
     chosen_card = np.array(self.hands[0][card_id])
     if chosen_card[0] == 0:
       return self._lost("played card that was played before") 
@@ -73,7 +73,7 @@ class WizardsEnv(gym.Env):
     return self._get_observations(), reward, done, info
       
   def _lost(self, reason):
-    return self._get_observations(), -100 + 10*sum(self.scores) + self.scores[0], True, {"reason": reason}
+    return self._get_observations(), -1000 + 10*sum(self.scores) + self.scores[0], True, {"reason": reason}
 
   def reset(self):
     deck = [[i, suit] for i in range(1, self.max_card + 1) for suit in range(1, self.suits + 1)]
